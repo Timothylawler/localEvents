@@ -1,12 +1,16 @@
 package com.example.lawkar.localeventsv2;
 
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.TabLayout.Tab;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -14,7 +18,10 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 
 import com.example.lawkar.localeventsv2.adapter.EventRecyclerAdapter;
 import com.example.lawkar.localeventsv2.model.EventModel;
@@ -22,13 +29,19 @@ import com.example.lawkar.localeventsv2.model.EventModel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EventsActivity extends AppCompatActivity implements TabLayout.OnTabSelectedListener {
+public class EventsActivity extends AppCompatActivity implements TabLayout.OnTabSelectedListener
+        , ListView.OnItemClickListener {
 
     private List<EventModel> eventList;
     private RecyclerView eventRecyclerView;
     private AppBarLayout appBarLayout;
     private TabLayout tabLayout;
     private ImageView topContentImage;
+
+    private DrawerLayout mDrawerLayout;
+    private ActionBarDrawerToggle mDrawerToggle;
+    private String[] drawerItems;
+    private ListView mDrawerList;
 
 
     @Override
@@ -39,6 +52,10 @@ public class EventsActivity extends AppCompatActivity implements TabLayout.OnTab
         //  Erase the title
         toolbar.setTitle("");
         setSupportActionBar(toolbar);
+
+
+        setupDrawer();
+
 
         appBarLayout = (AppBarLayout) findViewById(R.id.event_app_bar_layout);
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
@@ -68,6 +85,83 @@ public class EventsActivity extends AppCompatActivity implements TabLayout.OnTab
 
         eventRecyclerView = ( RecyclerView ) findViewById(R.id.event_recycler_view);
         setupRecyclerView();
+    }
+
+    /**
+     * Sets up the navigation drawer
+     */
+    private void setupDrawer() {
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.event_drawer_layout);
+        mDrawerList = (ListView) findViewById(R.id.event_left_drawer_list);
+
+        //  Attach a click listener to the list
+        mDrawerList.setOnItemClickListener(this);
+
+        dummyArray();
+        //  Set adapter for the list
+        mDrawerList.setAdapter(new ArrayAdapter<String>(this
+                , android.R.layout.simple_list_item_1
+                , drawerItems));
+
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout
+                ,R.string.drawer_open,R.string.drawer_close){
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                //  Set title
+                invalidateOptionsMenu();
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+                //  set title
+                invalidateOptionsMenu();
+
+            }
+        };
+
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
+
+        if(getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu_black_24dp);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
+
+    }
+
+    /**
+     * Called whenever we call invalidateOptionsMenu();
+     */
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        //  If drawer is open, hide action items related to the content view
+        boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
+        menu.findItem(R.id.action_settings).setVisible(!drawerOpen);
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public void onPostCreate(Bundle savedInstanceState, PersistableBundle persistentState) {
+        super.onPostCreate(savedInstanceState, persistentState);
+
+        mDrawerToggle.syncState();
+
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    private void dummyArray() {
+        drawerItems = new String[]{
+                "Events" , "Asdf", "gjsgl", "etc"
+        };
     }
 
     private void setupTabs() {
@@ -103,9 +197,10 @@ public class EventsActivity extends AppCompatActivity implements TabLayout.OnTab
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+
+        if(mDrawerToggle.onOptionsItemSelected(item))
+            return true;
+
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -139,4 +234,18 @@ public class EventsActivity extends AppCompatActivity implements TabLayout.OnTab
     /**
      * END OF TABS
      */
+
+    /**
+     * Handles clicks in the listview
+     * @param adapterView
+     * @param view  View that the click event happened on
+     * @param i     index - Position of the view
+     * @param l
+     */
+    @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+    }
+
+
 }
